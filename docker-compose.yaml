@@ -1,0 +1,31 @@
+name: dumbdo
+services:
+  server:
+    image: dumbwareio/dumbdo:latest
+    container_name: dumbdo
+    hostname: dumbdo
+    restart: always
+    pull_policy: always
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DUMBDO_PIN: 1234
+      NODE_ENV: production
+      DUMBDO_SITE_TITLE: ${APP_ORG_NAME:-DumbDO}
+    ports:
+      - '127.0.0.1:58062:3000'
+    volumes:
+      - /var/lib/srv/$USER/docker/dumbwareio/dumbdo/latest/rootfs/data/dumbdo:/app/data:rw
+    healthcheck:
+      test: ['CMD-SHELL', 'nc -z 127.0.0.1 3000 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - dumbdo
+
+networks:
+  dumbdo:
+    name: dumbdo
+    external: false
