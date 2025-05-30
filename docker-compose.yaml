@@ -22,9 +22,9 @@ services:
       - DUMBDO_PIN=${APP_SECRET_PIN:-1234}
       - DUMBDO_SITE_TITLE=${APP_ORG_NAME:-DumbDO}
     ports:
-      - '127.0.0.1:58062:80'
+      - '172.17.0.1:58062:80'
     volumes:
-      - '/var/lib/srv/$USER/docker/dumbwareio/dumbdo/latest/rootfs/data/dumbdo:/app/data'
+      - '/var/lib/srv/$USER/docker/dumbdo/rootfs/data/dumbdo:/app/data'
     healthcheck:
       test: ['CMD-SHELL', 'nc -z 127.0.0.1 3000 || exit 1']
       interval: 10s
