@@ -1,0 +1,40 @@
+# nginx proxy address - http://172.17.0.1:58062
+
+name: dumbdo
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: dumbwareio/dumbdo:latest
+    container_name: dumbdo-app
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      PORT: 80
+      NODE_ENV: production
+      DUMBDO_PIN: ${APP_SECRET_PIN:-changeme_pin_4_digits}
+      DUMBDO_SITE_TITLE: ${APP_ORG_NAME:-Dumbdo}
+    ports:
+      - '172.17.0.1:58062:80'
+    volumes:
+      - './rootfs/data/dumbdo:/app/data'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:80 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - dumbdo
+
+networks:
+  dumbdo:
+    name: dumbdo
+    external: false
