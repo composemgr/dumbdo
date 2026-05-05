@@ -47,7 +47,7 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/dumbdo` - Data storage
+- `./volumes/data/dumbdo` - Data storage
 
 ## 🔐 Security
 
