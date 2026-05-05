@@ -24,7 +24,7 @@ services:
     ports:
       - '172.17.0.1:58062:80'
     volumes:
-      - './rootfs/data/dumbdo:/app/data'
+      - './volumes/data/dumbdo:/app/data'
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:80 || exit 1']
       interval: 10s
