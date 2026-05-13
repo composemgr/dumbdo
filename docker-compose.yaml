@@ -21,6 +21,8 @@ services:
       NODE_ENV: production
       DUMBDO_PIN: ${APP_SECRET_PIN:-changeme_pin_4_digits}
       DUMBDO_SITE_TITLE: ${APP_ORG_NAME:-Dumbdo}
+      CONTAINER_NAME: dumbdo-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:58062:80'
     volumes:
@@ -33,8 +35,30 @@ services:
       start_period: 90s
     networks:
       - dumbdo
+      - proxy
+      - cloudflare
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://dumbdo-app:80'
+      - 'cloudflare.hostname=dumbdo.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.dumbdo-app.entrypoints=http'
+      - 'traefik.http.routers.dumbdo-app-secure.tls=true'
+      - 'traefik.http.routers.dumbdo-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.dumbdo-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.dumbdo-app.middlewares=dumbdo-app-https-redirect'
+      - 'traefik.http.routers.dumbdo-app-secure.entrypoints=https'
+      - 'traefik.http.routers.dumbdo-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.dumbdo-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.dumbdo-app-secure.service=dumbdo-app'
+      - 'traefik.http.services.dumbdo-app.loadbalancer.server.port=80'
 
 networks:
   dumbdo:
     name: dumbdo
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
