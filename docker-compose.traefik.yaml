@@ -1,0 +1,54 @@
+name: dumbdo
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: dumbwareio/dumbdo:latest
+    container_name: dumbdo-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: dumbdo-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      PORT: 3000
+      NODE_ENV: production
+      DUMBDO_PIN: ${APP_SECRET_PIN:-changeme_pin_4_digits}
+      DUMBDO_SITE_TITLE: ${APP_ORG_NAME:-Dumbdo}
+    volumes:
+      - './volumes/data/dumbdo:/app/data'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3000 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.dumbdo-app.entrypoints=http'
+      - 'traefik.http.routers.dumbdo-app.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.dumbdo-app.middlewares=dumbdo-app-https-redirect'
+      - 'traefik.http.middlewares.dumbdo-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.dumbdo-app-secure.entrypoints=https'
+      - 'traefik.http.routers.dumbdo-app-secure.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.dumbdo-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.dumbdo-app-secure.service=dumbdo-app'
+      - 'traefik.http.services.dumbdo-app.loadbalancer.server.port=3000'
+    networks:
+      - dumbdo
+      - traefik
+
+networks:
+  dumbdo:
+    name: dumbdo
+    external: false
+  traefik:
+    external: true

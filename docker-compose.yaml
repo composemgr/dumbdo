@@ -1,4 +1,4 @@
-# nginx proxy address - http://172.17.0.1:58062
+# nginx proxy address - http://172.17.0.1:64162
 
 name: dumbdo
 x-logging: &default-logging
@@ -11,20 +11,21 @@ services:
   app:
     image: dumbwareio/dumbdo:latest
     container_name: dumbdo-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: dumbdo-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       PORT: 3000
       NODE_ENV: production
       DUMBDO_PIN: ${APP_SECRET_PIN:-changeme_pin_4_digits}
       DUMBDO_SITE_TITLE: ${APP_ORG_NAME:-Dumbdo}
-      CONTAINER_NAME: dumbdo-app
-      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
-      - '172.17.0.1:58062:3000'
+      - '172.17.0.1:64162:3000'
     volumes:
       - './volumes/data/dumbdo:/app/data'
     healthcheck:
@@ -35,30 +36,8 @@ services:
       start_period: 90s
     networks:
       - dumbdo
-      - proxy
-      - cloudflare
-    labels:
-      - 'traefik.enable=true'
-      - 'cloudflare.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'cloudflare.service=http://dumbdo-app:3000'
-      - 'cloudflare.hostname=dumbdo.${CLOUDFLARE_ZONE_NAME:-}'
-      - 'traefik.http.routers.dumbdo-app.entrypoints=http'
-      - 'traefik.http.routers.dumbdo-app-secure.tls=true'
-      - 'traefik.http.routers.dumbdo-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.middlewares.dumbdo-app-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.dumbdo-app.middlewares=dumbdo-app-https-redirect'
-      - 'traefik.http.routers.dumbdo-app-secure.entrypoints=https'
-      - 'traefik.http.routers.dumbdo-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.routers.dumbdo-app-secure.tls.certresolver=cloudflare'
-      - 'traefik.http.routers.dumbdo-app-secure.service=dumbdo-app'
-      - 'traefik.http.services.dumbdo-app.loadbalancer.server.port=3000'
 
 networks:
   dumbdo:
     name: dumbdo
     external: false
-  proxy:
-    external: true
-  cloudflare:
-    external: true
